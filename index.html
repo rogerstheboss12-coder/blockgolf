@@ -5424,12 +5424,14 @@ input[type=range]{accent-color:var(--accent)}
   ];
   // "Championship" belongs to the Majors and Championship Tees, never a Tour event.
   var TOUR_EVENT_NAMES = ['Classic', 'Open', 'Invitational', 'Cup', 'Shield', 'Trophy', 'Series'];
-  // Fictional block golfers, best (index 0) to worst — never a real player.
-  var TOUR_RIVALS = ['Cubby Fairweather', 'Stacy Brickwell', 'Tilly Voxel', 'Rex Cobblestone', 'Penny Pixel',
-    'Hank Mortar', 'Dot Gridley', 'Barney Blox', 'Lulu Lattice', 'Gus Tumble', 'Maple Stackhouse', 'Otto Square',
-    'Wren Chisel', 'Bo Plinth', 'Ivy Keystone', 'Monty Cube', 'Nell Paver', 'Ziggy Brick', 'Cora Tessel', 'Rufus Slab',
-    'Daisy Domino', 'Abe Ashlar', 'Flo Mosaic', 'Kip Studly', 'Juno Quarry', 'Pip Cornerstone', 'Rhoda Rubble',
-    'Ned Notch', 'Sunny Shale', 'Wally Block'];
+  // Block golfers, best (index 0) to worst — playful nods to golf's greats,
+  // never a real player's actual name.
+  var TOUR_RIVALS = ['Le Tigre', 'Rory McBlock', 'Scottie Shuffler', 'Jack Blocklaus', 'Arnie Palmblock',
+    'Phil Pickelson', 'Seve Bricksteros', 'Annika Sorenblock', 'Brooks Kubepka', 'Jordan Spleeth', 'Nelly Kordacube',
+    'Gary Pixelayer', 'Big Easy Ernie', 'Bubba Blockson', 'Hideki Matsublocka', 'Collin Morikube', 'Xander Schauffcube',
+    'Jon Ramp', 'Viktor Hovblock', 'Lexi Blockson', 'Lee Trevinyo', 'Tommy Fleetcube', 'Shane Lowbrick',
+    'Ludvig Blockberg', 'Sergio Garcube', 'Tony Finblock', 'Davis Love Block', 'Patrick Brick', 'Fuzzy Cubeller',
+    'Long John Dally'];
   // One fictional sponsor per season, picked before its first event. The
   // goal is read from each event's S.roundStats over the whole season and
   // judged after the last event: meeting it pays a coin bonus (x the tier's
@@ -11333,6 +11335,28 @@ input[type=range]{accent-color:var(--accent)}
     if (!fxCamLow && !(titleFramed && S.phase === 'title')) liftClear(camPos);
     camera.position.copy(camPos);
     camera.lookAt(camLook);
+    dockShift(dt);
+  }
+
+  // On a short, wide screen (a desktop browser) the bottom dock covers the
+  // ball and golfer. Slide the picture up — a lens shift, so same scale and
+  // same aim — just far enough to clear the dock; tall phones need none.
+  var dockEl = document.querySelector('.bottom'), camShift = 0, _ds = new THREE.Vector3(), dockR = null;
+  function dockShift(dt) {
+    var H = window.innerHeight, want = camShift;
+    if (S.phase === 'title') want = 0;
+    else if (S.phase === 'aim' || S.phase === 'charge') {
+      // a layout read forces a reflow, so only every 20th frame
+      if (!dockR || frameN % 20 === 0) dockR = dockEl.getBoundingClientRect();
+      var r = dockR;
+      camera.updateMatrixWorld();
+      _ds.set(S.ball.x, S.ball.y, S.ball.z).applyMatrix4(camera.matrixWorldInverse);
+      var ballPx = H / 2 * (1 + _ds.y / (_ds.z * Math.tan(camera.fov * Math.PI / 360)));
+      want = r.height ? clamp(ballPx + H * .1 - r.top, 0, H * .3) : 0;
+    }
+    camShift += (want - camShift) * (1 - Math.pow(.01, dt));
+    if (camShift < .5) { if (camera.view && camera.view.enabled) camera.clearViewOffset(); }
+    else camera.setViewOffset(window.innerWidth, H, 0, camShift, window.innerWidth, H);
   }
 
   // ==========================================================================
@@ -14521,18 +14545,18 @@ input[type=range]{accent-color:var(--accent)}
   // One rival per course, stronger up the ladder (ADR-0003). On each hole the
   // rival makes birdie / par / bogey with these odds, double bogey otherwise.
   var RIVALS = {
-    meadow: { name: 'Dot Hartley',  odds: [.10, .55, .28] },
-    canyon: { name: 'Rusty Vance',  odds: [.13, .56, .25] },
-    ocean:  { name: 'Marina Kole',  odds: [.16, .57, .21] },
-    pine:   { name: 'Hollis Grey',  odds: [.19, .58, .18] },
-    frost:  { name: 'Sven Aldric',  odds: [.22, .58, .16] },
-    cove:   { name: 'Coral Reyes',  odds: [.25, .58, .13] },
-    dunes:  { name: 'The Sultan',   odds: [.29, .57, .11] },
-    highland: { name: 'Fergus Drummond', odds: [.31, .56, .10] },
-    caldera:  { name: 'Vulcana Reyes',   odds: [.33, .55, .09] },
-    temple:   { name: 'Jade Okafor',     odds: [.35, .54, .08] },
-    terrace:  { name: 'Mei Takara',      odds: [.37, .53, .07] },
-    atoll:    { name: 'Kai Nalu',        odds: [.39, .52, .06] }
+    meadow: { name: 'Fuzzy Cubeller',   short: 'Fuzzy',    odds: [.10, .55, .28] },
+    canyon: { name: 'Bubba Blockson',   short: 'Bubba',    odds: [.13, .56, .25] },
+    ocean:  { name: 'Shark Blockman',   short: 'Shark',    odds: [.16, .57, .21] },
+    pine:   { name: 'Arnie Palmblock',  short: 'Arnie',    odds: [.19, .58, .18] },
+    frost:  { name: 'Annika Sorenblock', short: 'Annika',  odds: [.22, .58, .16] },
+    cove:   { name: 'Seve Bricksteros', short: 'Seve',     odds: [.25, .58, .13] },
+    dunes:  { name: 'Big Easy Ernie',   short: 'Ernie',    odds: [.29, .57, .11] },
+    highland: { name: 'Rory McBlock',   short: 'Rory',     odds: [.31, .56, .10] },
+    caldera:  { name: 'Brooks Kubepka', short: 'Brooks',   odds: [.33, .55, .09] },
+    temple:   { name: 'Gary Pixelayer', short: 'Gary',     odds: [.35, .54, .08] },
+    terrace:  { name: 'Jack Blocklaus', short: 'Jack',     odds: [.37, .53, .07] },
+    atoll:    { name: 'Le Tigre',       short: 'Le Tigre', odds: [.39, .52, .06] }
   };
   var RIVAL_WIN_COINS = 1500, RIVAL_HALVE_COINS = 400;   // × difficulty, in place of the round bonus
   // The rival's score on a hole comes from the round seed and the hole's real
@@ -15033,7 +15057,7 @@ input[type=range]{accent-color:var(--accent)}
       ACTIVE = C.holes.slice(); ACTIVE_META = C;
       S.terrainSeed = C.seed; S.roundSeed = (Math.random() * 1e9) | 0;
       var R = RIVALS[C.id];
-      S.rival = { id: C.id, name: R.name, odds: R.odds, scores: [] };
+      S.rival = { id: C.id, name: R.name, short: R.short, odds: R.odds, scores: [] };
     } else if (S.mode === 'party') {
       S.courseIdx = Math.min(partySetup.course, COURSES.length - 1);
       C = COURSES[S.courseIdx];
@@ -15109,7 +15133,7 @@ input[type=range]{accent-color:var(--accent)}
   // The mode's line ahead of the hole name, and Survival's mulligan button.
   function modeHud() {
     var t = '';
-    if (S.mode === 'rival') t = S.rival.name.split(' ')[0] + ': ' + rivalStatusText(rivalStatus(), true);
+    if (S.mode === 'rival') t = S.rival.short + ': ' + rivalStatusText(rivalStatus(), true);
     else if (S.mode === 'party') t = partyNow().name + (partyNow().tee !== 'regular' ? ' · ' + PARTY_TEES[partyNow().tee].name : '');
     else if (S.mode === 'survival') t = '♥ ' + S.surv.lives;
     else if (S.mode === 'challenge') t = '★ ' + S.chal.ch.stars[0] + '/' + S.chal.ch.stars[1] + '/' + S.chal.ch.stars[2];
